@@ -1,6 +1,6 @@
 """Point estimates reported in the paper that are not produced by the bootstrap scripts:
 diagonal table, retention by group, cells below the floor, calibration cost, ECE and its
-correlation with the calibration cost, per-class performance, translate-test/translate-train
+correlation with the calibration cost, per-class performance (mean and per cell), translate-test/translate-train
 table, alternative retention formulations, oracle gain and seed variance.
 Writes tabelas_complementares.json and prints a summary."""
 import json, sys
@@ -101,6 +101,7 @@ for m in MODELOS:
         spearman_ece_calibracao=dict(rho=float(rho), p=float(p_rho)),
         por_classe_transf=dict(f1_pos=pc_transf[0], f1_neg=pc_transf[1], rev_pos=pc_transf[2], prec_pos=pc_transf[3]),
         por_classe_diag=pc_diag,
+        por_classe_celula={f"{s}->{t}": dict(zip(("f1_pos", "f1_neg", "rev_pos", "prec_pos"), por_classe(*C[(s, t)]).tolist())) for (s, t) in sorted(C)},
         por_classe_diag_media=dict(f1_pos=float(np.mean([v[0] for v in pc_diag.values()])), f1_neg=float(np.mean([v[1] for v in pc_diag.values()]))),
         razao_formulacoes=dict(A=razao(R), B=razao(RB), C=razao(RC), D=razao(RD)),
         ganho_oraculo=float(np.mean([Fo[k] - Fp[k] for k in C])),

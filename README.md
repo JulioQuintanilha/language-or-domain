@@ -39,7 +39,8 @@ The corpora are not redistributed here. Download them from the original sources 
 `data/splits/split_{corpus}.json` holds the indices of each partition, relative to the row order
 of the original files after loading (for ToLD-Br, after the stratified subsample of 7,000 with seed 42
 done by `protocolo_pibic.carregar_toldbr`). Copy the folder to `pibic/splits/`; the notebooks load
-it and never regenerate it.
+it and never regenerate it. `data/splits/SHA256SUMS` holds the SHA-256 of each partition file
+(`sha256sum -c SHA256SUMS` from that folder).
 
 ## Reproducing the paper
 
@@ -86,7 +87,7 @@ scripts can be run directly. All scripts use seed 20261030.
 | Costs with EM-estimated prevalence | `em_saerens.json` |
 | XLM-R minus mBERT with Holm correction | `figura_holm.json` |
 | Retention by group, Portuguese sources | `figura_grupos.json`, `figura_fontes.json`, `tabelas_complementares.json` |
-| Diagonal table, cells below the floor, calibration cost, ECE, per-class performance, translation table, alternative retention formulations, gamma sensitivity, oracle check, uncertainty decomposition | `tabelas_complementares.json` |
+| Diagonal table, cells below the floor, calibration cost, ECE, per-class performance (mean and per cell, `por_classe_celula`), translation table, alternative retention formulations, gamma sensitivity, oracle check, uncertainty decomposition | `tabelas_complementares.json` |
 | Surface-shortcut table, duplicates, tokenizer fertility | `diagnosticos` field of `results/tables/M3_mBERT_resultados_20260806_0327.json` and `M4_XLMR_resultados_20260806_0416.json` |
 | Strict-English ablation | `results/tables/ablacao_*.csv` |
 | Blind validation of translations, agreement between annotators | `blind_validation/preservation.py`, `blind_validation/agreement.py` |
@@ -105,7 +106,8 @@ scripts can be run directly. All scripts use seed 20261030.
 - Exported error-analysis files contain corpus texts and are not included.
 - `blind_validation/` holds the answers of the two blind annotators of the translation validation
   (`annotator1_answers.csv`, `annotator2_answers.csv`), the key with the translation direction and
-  gold label of each item (`key.csv`), `preservation.py` (preservation table, by annotator) and
+  gold label of each item (`key.csv`, which also holds the automatic triage label of the 80 items
+  it covered), `preservation.py` (preservation table, by annotator) and
   `agreement.py` (agreement between annotators). The texts are machine translations of corpus items
   and are not distributed.
 
