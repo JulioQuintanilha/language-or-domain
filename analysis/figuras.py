@@ -26,8 +26,8 @@ K = len(CORPORA)
 plt.rcParams.update({"font.family": "DejaVu Sans", "font.size": 8, "pdf.fonttype": 42, "ps.fonttype": 42,
                      "axes.edgecolor": CINZA, "axes.labelcolor": TINTA, "xtick.color": TINTA, "ytick.color": TINTA,
                      "axes.spines.top": False, "axes.spines.right": False, "legend.frameon": False})
-virg = lambda v, d=2: f"{v:.{d}f}".replace(".", ",").replace("-", "−")
-TICK = FuncFormatter(lambda v, _: "0" if abs(v) < 1e-9 else f"{v:.2f}".rstrip("0").rstrip(".").replace(".", ",").replace("-", "−"))
+virg = lambda v, d=2: f"{v:.{d}f}".replace("-", "−")
+TICK = FuncFormatter(lambda v, _: "0" if abs(v) < 1e-9 else f"{v:.2f}".rstrip("0").rstrip(".").replace("-", "−"))
 
 def salvar(fig, nome):
     fig.savefig(SAIDA + nome + ".pdf")
@@ -65,7 +65,7 @@ for k, m in enumerate(M):
     g = [FP[m][CORPORA.index(s), CORPORA.index(t)] - B_[t] for s, t in pares]
     ax.bar(np.arange(6) + (k - 1.5) * w, g, w * 0.92, color=ORD[k], label=ROTM[m])
 ax.set_xticks(range(6)); ax.set_xticklabels([f"{s}→{t}" for s, t in pares])
-ax.set_ylabel("Ganho sobre o piso trivial"); ax.yaxis.set_major_formatter(TICK)
+ax.set_ylabel("Gain over the trivial floor"); ax.yaxis.set_major_formatter(TICK)
 ax.grid(axis="y", color=GRADE, lw=0.6); ax.set_axisbelow(True)
 ax.legend(ncol=4, fontsize=7, loc="upper left", bbox_to_anchor=(0, 1.12))
 fig.tight_layout(); salvar(fig, "fig2_grupoA")
@@ -81,7 +81,7 @@ def heatmap(Mx, nome, cmap, norm, rot_cb, fmt=lambda v: virg(v), marca=None, tam
             txt = fmt(v) + ("*" if marca is not None and marca[i, j] else "")
             ax.text(j, i, txt, ha="center", va="center", fontsize=6.6, color="white" if lum < 0.5 else TINTA)
     ax.set_xticks(range(K)); ax.set_xticklabels(CORPORA); ax.set_yticks(range(K)); ax.set_yticklabels(CORPORA)
-    ax.set_xlabel("Corpus de avaliação"); ax.set_ylabel("Corpus de treinamento")
+    ax.set_xlabel("Evaluation corpus"); ax.set_ylabel("Training corpus")
     for sp in ax.spines.values(): sp.set_visible(False)
     ax.set_xticks(np.arange(-.5, K), minor=True); ax.set_yticks(np.arange(-.5, K), minor=True)
     ax.grid(which="minor", color="white", lw=1.2); ax.tick_params(which="minor", length=0); ax.tick_params(length=0)
@@ -92,7 +92,7 @@ def heatmap(Mx, nome, cmap, norm, rot_cb, fmt=lambda v: virg(v), marca=None, tam
 
 for m in M:
     heatmap(FP[m], f"fig3_macrof1_{m}", SEQ, Normalize(0.1, 1.0), "Macro-F1")
-    heatmap(AU[m], f"fig4_auc_{m}", DIV, TwoSlopeNorm(0.5, 0.2, 1.0), "AUC-ROC (0,5 = acaso)")
+    heatmap(AU[m], f"fig4_auc_{m}", DIV, TwoSlopeNorm(0.5, 0.2, 1.0), "ROC-AUC (0.5 = chance)")
 
 # ---------------------------------------------------------------- per-cell bootstrap
 Z = np.load("figuras_bootstrap.npz")
@@ -113,8 +113,8 @@ ordem = np.argsort(pv.ravel()); n = pv.size; adj = np.empty(n); corre = 0.0
 for r, k in enumerate(ordem):
     corre = max(corre, min(1.0, (n - r) * pv.ravel()[k])); adj[k] = corre
 pholm = adj.reshape(K, K); holm = pholm <= 0.05
-heatmap(dif, "fig5_xlmr_menos_mbert", DIV, TwoSlopeNorm(0, -0.2, 0.2), "Diferença de macro-F1",
-        fmt=lambda v: f"{v:+.3f}".replace(".", ",").replace("-", "−"), marca=holm, tam=(4.8, 3.7))
+heatmap(dif, "fig5_xlmr_menos_mbert", DIV, TwoSlopeNorm(0, -0.2, 0.2), "Macro-F1 difference",
+        fmt=lambda v: f"{v:+.3f}".replace("-", "−"), marca=holm, tam=(4.8, 3.7))
 json.dump({"n_holm": int(holm.sum()), "celulas": [f"{CORPORA[i]}->{CORPORA[j]}" for i in range(K) for j in range(K) if holm[i, j]],
            "dif": {f"{CORPORA[i]}->{CORPORA[j]}": round(float(dif[i, j]), 3) for i in range(K) for j in range(K)},
            "p": {f"{CORPORA[i]}->{CORPORA[j]}": round(float(pv[i, j]), 4) for i in range(K) for j in range(K)},
@@ -126,7 +126,7 @@ def ret_grupo(Fm, g):
     R = retencao(Fm)
     return np.mean([R[i, j] for (i, j), gg in GRUPO.items() if gg == g])
 fig, ax = plt.subplots(figsize=(6.6, 2.8))
-GR = [("A", "A · mesma língua,\noutro domínio"), ("B", "B · outra língua,\nsem cazaque"), ("C", "C · pares com\ncazaque")]
+GR = [("A", "A · same language,\nother domain"), ("B", "B · other language,\nno Kazakh"), ("C", "C · pairs with\nKazakh")]
 saida_grupos = {}
 for k, m in enumerate(M):
     pts = [ret_grupo(FP[m], g) for g, _ in GR]
@@ -139,7 +139,7 @@ for k, m in enumerate(M):
 json.dump(saida_grupos, open("figura_grupos.json", "w"), indent=1)
 ax.axhline(0, color=CINZA, lw=0.8)
 ax.set_xticks(range(3)); ax.set_xticklabels([r for _, r in GR])
-ax.set_ylabel("Retenção do ganho sobre o piso"); ax.yaxis.set_major_formatter(TICK)
+ax.set_ylabel("Retention of the gain over the floor"); ax.yaxis.set_major_formatter(TICK)
 ax.grid(axis="y", color=GRADE, lw=0.6); ax.set_axisbelow(True)
 ax.legend(ncol=2, fontsize=7, loc="upper right")
 fig.tight_layout(); salvar(fig, "fig7_grupos")
@@ -147,7 +147,7 @@ fig.tight_layout(); salvar(fig, "fig7_grupos")
 # ---------------------------------------------------------------- calibration x representation (M4)
 cal = FP["M4"] - FX["M4"]
 fig, ax = plt.subplots(figsize=(6.6, 3.3))
-ESTILO = {"A": (CAT[0], "o", "Grupo A"), "B": (CAT[1], "s", "Grupo B"), "C": (CAT[2], "^", "Grupo C"), "D": (CAT[3], "D", "Diagonal")}
+ESTILO = {"A": (CAT[0], "o", "Group A"), "B": (CAT[1], "s", "Group B"), "C": (CAT[2], "^", "Group C"), "D": (CAT[3], "D", "Diagonal")}
 for g, (cor, mk, nome) in ESTILO.items():
     ij = [k for k, gg in GRUPO.items() if gg == g]
     ax.scatter([AU["M4"][i, j] for i, j in ij], [cal[i, j] for i, j in ij], s=26, c=cor, marker=mk,
@@ -155,8 +155,8 @@ for g, (cor, mk, nome) in ESTILO.items():
     if g == "C":
         rotular = [(f"{CORPORA[i]}→{CORPORA[j]}", AU["M4"][i, j], cal[i, j]) for i, j in ij]
 ax.axvline(0.5, color=CINZA, lw=0.8, ls="--"); ax.axhline(0, color=CINZA, lw=0.8, ls="--")
-ax.set_xlabel("AUC-ROC da célula (qualidade da ordenação transferida)")
-ax.set_ylabel("Custo de calibração (macro-F1)")
+ax.set_xlabel("Cell ROC-AUC (quality of the transferred ranking)")
+ax.set_ylabel("Calibration cost (macro-F1)")
 ax.xaxis.set_major_formatter(TICK); ax.yaxis.set_major_formatter(TICK)
 ax.grid(color=GRADE, lw=0.6); ax.set_axisbelow(True)
 ax.legend(fontsize=7, loc="upper right")
@@ -188,8 +188,8 @@ def crit(m, s, c):
     if c == "ganho": return np.mean([FP[m][i, j] - b[j] for j in alvos])
     return np.mean([retencao(FP[m])[i, j] for j in alvos])
 saida_fontes = {}
-for c, rot, y0 in (("f1", "Macro-F1 médio (alvos PT)", 0.45), ("ganho", "Ganho médio sobre o piso (alvos PT)", 0.0),
-                   ("ret", "Retenção média (alvos PT)", 0.0)):
+for c, rot, y0 in (("f1", "Macro-F1 (PT targets)", 0.45), ("ganho", "Gain over floor (PT targets)", 0.0),
+                   ("ret", "Retention (PT targets)", 0.0)):
     fig, ax = plt.subplots(figsize=(2.5, 2.4)); w3 = 0.26
     for k, (s, nome) in enumerate(FONTES):
         v = [crit(m, s, c) for m in M]
@@ -206,14 +206,14 @@ json.dump(saida_fontes, open("figura_fontes.json", "w"), indent=1)
 # ---------------------------------------------------------------- costs under the fixed threshold
 R = json.load(open("final_fixo_B10000_v2.json"))
 fig, ax = plt.subplots(figsize=(3.6, 2.9)); x = range(4)
-for k, cor, mk, ls, nome in (("lin", CAT[0], "o", "-", "Língua, alvos EN e ID"), ("lin_rev", CAT[2], "^", "--", "Língua, alvos PT"),
-                              ("dom", CAT[1], "s", "-", "Domínio, alvos PT")):
+for k, cor, mk, ls, nome in (("lin", CAT[0], "o", "-", "Language, EN and ID targets"), ("lin_rev", CAT[2], "^", "--", "Language, PT targets"),
+                              ("dom", CAT[1], "s", "-", "Domain, PT targets")):
     y = [R["ponto"][m][k] for m in M]; lo = [R["ic"][m][k][0] for m in M]; hi = [R["ic"][m][k][1] for m in M]
     ax.fill_between(x, lo, hi, color=cor, alpha=0.12, linewidth=0)
     ax.plot(x, y, color=cor, lw=2, ls=ls, marker=mk, ms=6, mec="white", mew=1.2, label=nome)
     ax.annotate(virg(y[3], 3), (3, y[3]), xytext=(7, 0), textcoords="offset points", ha="left", va="center", fontsize=7.5, color=TINTA)
 ax.set_xticks(list(x)); ax.set_xticklabels(ROT2, fontsize=7.5); ax.set_xlim(-0.25, 3.75)
-ax.set_ylabel("Custo de transferência (1 − retenção)"); ax.yaxis.set_major_formatter(TICK)
+ax.set_ylabel("Transfer cost (1 − retention)"); ax.yaxis.set_major_formatter(TICK)
 ax.axhline(0, color=CINZA, lw=0.6, ls=":"); ax.grid(axis="y", color=GRADE, lw=0.6); ax.set_axisbelow(True)
 ax.legend(fontsize=7, loc="upper right")
 fig.tight_layout(); salvar(fig, "fig10_limiar_fixo")
